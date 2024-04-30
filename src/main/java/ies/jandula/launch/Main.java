@@ -18,21 +18,16 @@ public class Main
         File file = new File("src" + File.separator + "main" + File.separator + "resources" + File.separator + "Historicos.csv");
         
         File carpetaAro = null;
-        
         File carpetaMes = null;
-        
-        File carpetaDay = null;
+        File carpetaDia = null;
 
         Set<Integer> arosList = new HashSet<>(); 
-        
         Set<Integer> mesList = new HashSet<>(); 
-        
         Set<Integer> diaList = new HashSet<>();
         
-
         try (Scanner scanner = new Scanner(file)) 
         {
-            scanner.nextLine();
+            scanner.nextLine(); // Leer la primera línea y descartarla
 
             while (scanner.hasNextLine()) 
             {
@@ -40,79 +35,104 @@ public class Main
 
                 if (!linea.isEmpty()) 
                 {
-                        String[] datos = linea.split(",");
-                        String fechaStr = datos[0];
-                        int numero1 = Integer.parseInt(datos[1]);
-                        int numero2 = Integer.parseInt(datos[2]);
-                        int numero3 = Integer.parseInt(datos[3]);
-                        int numero4 = Integer.parseInt(datos[4]);
-                        int numero5 = Integer.parseInt(datos[5]);
-                        int numero6 = Integer.parseInt(datos[6]);
-                        int complementario = Integer.parseInt(datos[7]);
-                        int reintegro = -1;
-                        if (datos.length == 9) {
-                            reintegro = Integer.parseInt(datos[8]);
+                    String[] datos = linea.split(",");
+                    String fechaStr = datos[0];
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                    Date fecha = dateFormat.parse(fechaStr);
+
+                    int year = fecha.getYear() + 1900;
+                    arosList.add(year);
+
+                    int month = fecha.getMonth() + 1;
+                    mesList.add(month);
+
+                    int day = fecha.getDate();
+                    diaList.add(day);
+                }
+            }
+
+            for (int year : arosList) 
+            {
+                for (int month : mesList) 
+                {
+                    for (int day : diaList) 
+                    {
+                        carpetaDia = new File("src" + File.separator + "main" + File.separator + "resources" + File.separator + year + File.separator + month + File.separator + day);
+
+                        if (!carpetaDia.exists()) 
+                        {
+                            carpetaDia.mkdirs();
                         }
 
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                        Date fecha = dateFormat.parse(fechaStr);
+                        String fileName = carpetaDia.getPath() + File.separator + String.format("%02d%02d%04d.csv", day, month, year);
+                        FileWriter fileWriter = new FileWriter(fileName);
 
-                    // Se suma 1900 porque getYear() comienza en 100
-                    int year = fecha.getYear()+1900;
-                    arosList.add(year); 
-                    
-                    // Se suma 1 porque getMonth porque comienza en 0
-                    int month = fecha.getMonth()+1;                    
-                    mesList.add(month);
-                    
-                    // Se suma 1 porque getMonth porque comienza en 0
-                    int day = fecha.getDay()+1;
-                    diaList.add(day);                                       
+                        try (Scanner scanner2 = new Scanner(file)) 
+                        {
+                            scanner2.nextLine(); // Ignorar la primera línea
+
+                            while (scanner2.hasNextLine()) 
+                            {
+                                String linea = scanner2.nextLine();
+
+                                if (!linea.isEmpty()) 
+                                {
+                                    String[] datos = linea.split(",");
+                                    String fechaStr = datos[0];
+
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                                    Date fecha = dateFormat.parse(fechaStr);
+
+                                    int csvYear = fecha.getYear() + 1900;
+                                    int csvMonth = fecha.getMonth() + 1;
+                                    int csvDay = fecha.getDate();
+
+                                    if (csvYear == year && csvMonth == month && csvDay == day) 
+                                    {
+                                        int numero1 = Integer.parseInt(datos[1]);
+                                        int numero2 = Integer.parseInt(datos[2]);
+                                        int numero3 = Integer.parseInt(datos[3]);
+                                        int numero4 = Integer.parseInt(datos[4]);
+                                        int numero5 = Integer.parseInt(datos[5]);
+                                        int numero6 = Integer.parseInt(datos[6]);
+                                        int complementario = Integer.parseInt(datos[7]);
+                                        int reintegro = datos.length == 9 ? Integer.parseInt(datos[8]) : -1;
+
+                                        String dataLine = fechaStr + "," + numero1 + "," + numero2 + "," + numero3 + "," +
+                                                numero4 + "," + numero5 + "," + numero6 + "," + complementario + "," + reintegro + "\n";
+
+                                        fileWriter.write(dataLine);
+                                    }
+                                }
+                            }
+                        } 
+                        catch (FileNotFoundException fileNotFoundException) 
+                        {
+                            fileNotFoundException.printStackTrace();
+                        } 
+                        catch (ParseException parseException) 
+                        {
+                            parseException.printStackTrace();
+                        }
+
+                        fileWriter.close();
+                    }
                 }
             }
         } 
         catch (FileNotFoundException fileNotFoundException) 
         {
-        	fileNotFoundException.printStackTrace();
+            fileNotFoundException.printStackTrace();
         } 
-        catch (ParseException parseException) 
+        catch (IOException ioException) 
         {
-        	parseException.printStackTrace();
-        }
-
-        for (int year : arosList) 
+            ioException.printStackTrace();
+        } 
+        catch (ParseException e)
         {
-            carpetaAro = new File("src" + File.separator + "main" + File.separator + "resources" + File.separator + year);
-            
-            if (!carpetaAro.exists()) 
-            {
-            	carpetaAro.mkdirs(); 
-            }
-            
-            for(int month : mesList)
-            {
-            	carpetaMes = new File("src" + File.separator + "main" + File.separator + "resources" + File.separator + year + File.separator + month);
-            	
-            	if (!carpetaMes.exists()) 
-                {
-            		carpetaMes.mkdirs(); 
-                }
-            	
-            	for(int day : diaList)
-                {
-                	carpetaDay = new File("src" + File.separator + "main" + File.separator + "resources" + File.separator + year + File.separator + month +File.separator + day);
-                	
-                	if (!carpetaDay.exists()) 
-                    {
-                		carpetaDay.mkdirs(); 
-                    }
-                	
-            		FileWriter fileWriter = new FileWriter("src" + File.separator + "main" + File.separator + "resources" + File.separator + year + File.separator + month +File.separator + day + File.separator + day+month+year+".tsv");              	
-               
-                
-                }  
-            }
-        }
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 }
-
